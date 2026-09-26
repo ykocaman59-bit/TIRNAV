@@ -42,8 +42,10 @@ jobs:
 
       - name: APK Derle
         run: |
-          # Wrapper komutunu kaldırıp doğrudan kök dizinden assembleDebug çağırıyoruz
+          # Doğrudan app klasörünün içine girerek assembleDebug çalıştırıyoruz
+          cd app
           gradle assembleDebug --no-daemon
+          cd ..
 
           cp \
             app/build/outputs/apk/debug/app-debug.apk \
