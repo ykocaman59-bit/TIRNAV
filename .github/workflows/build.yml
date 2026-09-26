@@ -42,13 +42,15 @@ jobs:
 
       - name: APK Derle
         run: |
-          # settings.gradle dosyasının varlığını ve konumunu garantiye alalım
-          if [ ! -f "settings.gradle" ]; then
-            echo "include ':app'" > settings.gradle
-            echo "rootProject.name = 'TIRNAV'" >> settings.gradle
-          fi
-
-          gradle assembleDebug --no-daemon
+          # Wrapper dosyalarını sıfırdan oluşturup app modülünü bağlıyoruz
+          gradle wrapper --gradle-version 7.5
+          chmod +x gradlew
+          
+          # settings.gradle ve build.gradle'ın varlığını teyit edelim
+          ls -la
+          
+          # Doğrudan gradlew ile derleme yapalım
+          ./gradlew assembleDebug --no-daemon
 
           cp \
             app/build/outputs/apk/debug/app-debug.apk \
