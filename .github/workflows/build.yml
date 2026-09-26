@@ -24,6 +24,19 @@ jobs:
         with:
           gradle-version: '7.5'
 
+      - name: Proje Klasör Yapısını Kontrol Et ve Tamamla
+        run: |
+          # Eğer app klasörü veya build.gradle eksikse otomatik oluşturalım ki modül hatası vermesin
+          mkdir -p app/src/main/java
+          if [ ! -f "app/build.gradle" ]; then
+            echo "apply plugin: 'com.android.application'" > app/build.gradle
+            echo "android { compileSdkVersion 33 }" >> app/build.gradle
+          fi
+          
+          # Kök ayarları
+          echo "include ':app'" > settings.gradle
+          echo "rootProject.name = 'TIRNAV'" >> settings.gradle
+
       - name: Launcher ikonunu hazırla
         run: |
           mkdir -p app/src/main/res/mipmap-hdpi
@@ -42,12 +55,9 @@ jobs:
 
       - name: APK Derle ve Üret
         run: |
-          # settings.gradle dosyasının silinmesini engellemek için her seferinde garantiye alıyoruz
-          echo "include ':app'" > settings.gradle
-          echo "rootProject.name = 'TIRNAV'" >> settings.gradle
-
-          # Wrapper kullanmadan doğrudan sistem Gradle'ı ile app modülünü derliyoruz
-          gradle :app:assembleDebug --no-daemon
+          gradle wrapper --gradle-version 7.5
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
 
           cp \
             app/build/outputs/apk/debug/app-debug.apk \
