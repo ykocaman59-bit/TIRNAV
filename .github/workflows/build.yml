@@ -40,8 +40,9 @@ jobs:
             app/src/main/res/mipmap-hdpi/ic_launcher.png \
             app/src/main/res/mipmap-hdpi/ic_launcher_round.png
 
-      - name: TIRNAV APK Derle
+      - name: Gradle Wrapper ve APK Derle
         run: |
+          gradle wrapper --gradle-version 7.5
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
