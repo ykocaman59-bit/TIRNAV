@@ -42,7 +42,7 @@ jobs:
 
       - name: TIRNAV APK Derle
         run: |
-          gradle assembleDebug --no-daemon
+          gradle :app:assembleDebug --project-dir . --no-daemon
 
           cp \
             app/build/outputs/apk/debug/app-debug.apk \
