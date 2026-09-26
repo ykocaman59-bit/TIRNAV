@@ -24,65 +24,86 @@ jobs:
         with:
           gradle-version: '7.5'
 
-      - name: Proje Ayarlarını ve Namespace Tanımını Yapılandır
+      - name: Android SDK Kurulumu
+        uses: android-actions/setup-android@v3
+
+      - name: Android SDK 33 Kur
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager "platforms;android-33" "build-tools;33.0.2"
+
+      - name: Proje klasörlerini hazırla
         run: |
           mkdir -p app/src/main/java
-          
-          # Eğer manifest yoksa basit bir tane oluşturalım ki paket adı okunsun
-          if [ ! -f "app/src/main/AndroidManifest.xml" ]; then
-            echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.ykocaman.tirnav">' > app/src/main/AndroidManifest.xml
-            echo '<application android:label="TIRNAV"></application></manifest>' >> app/src/main/AndroidManifest.xml
-          fi
-
-          # build.gradle dosyasına eksiksiz namespace ve sdk tanımlarını ekliyoruz
-          echo "apply plugin: 'com.android.application'" > app/build.gradle
-          echo "android {" >> app/build.gradle
-          echo "    namespace 'com.ykocaman.tirnav'" >> app/build.gradle
-          echo "    compileSdk 33" >> app/build.gradle
-          echo "    defaultConfig {" >> app/build.gradle
-          echo "        applicationId 'com.ykocaman.tirnav'" >> app/build.gradle
-          echo "        minSdk 21" >> app/build.gradle
-          echo "        targetSdk 33" >> app/build.gradle
-          echo "        versionCode 1" >> app/build.gradle
-          echo "        versionName '1.0'" >> app/build.gradle
-          echo "    }" >> app/build.gradle
-          echo "}" >> app/build.gradle
-          
-          # Kök ayarları
-          echo "include ':app'" > settings.gradle
-          echo "rootProject.name = 'TIRNAV'" >> settings.gradle
+          mkdir -p app/src/main/res
 
       - name: Launcher ikonunu hazırla
         run: |
-          mkdir -p app/src/main/res/mipmap-hdpi
-          sudo apt-get update
-          sudo apt-get install -y librsvg2-bin
+          if [ -f "icon.svg" ]; then
+            sudo apt-get update
+            sudo apt-get install -y librsvg2-bin
 
-          rsvg-convert \
-            -w 192 \
-            -h 192 \
-            icon.svg \
-            -o app/src/main/res/mipmap-hdpi/ic_launcher.png
+            mkdir -p app/src/main/res/mipmap-hdpi
 
-          cp \
-            app/src/main/res/mipmap-hdpi/ic_launcher.png \
-            app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+            rsvg-convert \
+              -w 192 \
+              -h 192 \
+              icon.svg \
+              -o app/src/main/res/mipmap-hdpi/ic_launcher.png
 
-      - name: APK Derle ve Üret
+            cp \
+              app/src/main/res/mipmap-hdpi/ic_launcher.png \
+              app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+          else
+            echo "icon.svg bulunamadı, ikon oluşturma atlanıyor."
+          fi
+
+      - name: Proje dosyalarını kontrol et
+        run: |
+          echo "=============================="
+          echo "ROOT build.gradle"
+          echo "=============================="
+          cat build.gradle
+
+          echo "=============================="
+          echo "settings.gradle"
+          echo "=============================="
+          cat settings.gradle
+
+          echo "=============================="
+          echo "app/build.gradle"
+          echo "=============================="
+          cat app/build.gradle
+
+          echo "=============================="
+          echo "AndroidManifest.xml"
+          echo "=============================="
+          cat app/src/main/AndroidManifest.xml
+
+      - name: Gradle Wrapper oluştur
         run: |
           gradle wrapper --gradle-version 7.5
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+
+      - name: APK Derle ve Üret
+        run: |
+          ./gradlew clean assembleDebug --no-daemon --stacktrace
+
+      - name: APK Dosyasını Hazırla
+        run: |
+          mkdir -p output
 
           cp \
             app/build/outputs/apk/debug/app-debug.apk \
-            app/build/outputs/apk/debug/TIRNAV.apk
+            output/TIRNAV.apk
+
+          echo "APK başarıyla oluşturuldu:"
+          ls -lh output/TIRNAV.apk
 
       - name: APK Dosyasını Kaydet
         uses: actions/upload-artifact@v4
         with:
           name: TIRNAV
-          path: app/build/outputs/apk/debug/TIRNAV.apk
+          path: output/TIRNAV.apk
           if-no-files-found: error
-          retention-days: 1
-          
+          retention-days: 7
