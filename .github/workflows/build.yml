@@ -24,6 +24,13 @@ jobs:
         with:
           gradle-version: '7.5'
 
+      - name: Proje Yapısını Kontrol Et ve Ayarla
+        run: |
+          echo "Kök dizindeki dosyalar:"
+          ls -la
+          echo "Settings.gradle içeriği:"
+          cat settings.gradle || echo "settings.gradle bulunamadı!"
+
       - name: Launcher ikonunu hazırla
         run: |
           mkdir -p app/src/main/res/mipmap-hdpi
@@ -42,7 +49,7 @@ jobs:
 
       - name: APK Derle
         run: |
-          gradle :app:assembleDebug --no-daemon
+          gradle assembleDebug --no-daemon
 
           cp \
             app/build/outputs/apk/debug/app-debug.apk \
