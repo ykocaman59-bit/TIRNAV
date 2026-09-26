@@ -24,14 +24,29 @@ jobs:
         with:
           gradle-version: '7.5'
 
-      - name: Proje Klasör Yapısını Kontrol Et ve Tamamla
+      - name: Proje Ayarlarını ve Namespace Tanımını Yapılandır
         run: |
-          # Eğer app klasörü veya build.gradle eksikse otomatik oluşturalım ki modül hatası vermesin
           mkdir -p app/src/main/java
-          if [ ! -f "app/build.gradle" ]; then
-            echo "apply plugin: 'com.android.application'" > app/build.gradle
-            echo "android { compileSdkVersion 33 }" >> app/build.gradle
+          
+          # Eğer manifest yoksa basit bir tane oluşturalım ki paket adı okunsun
+          if [ ! -f "app/src/main/AndroidManifest.xml" ]; then
+            echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.ykocaman.tirnav">' > app/src/main/AndroidManifest.xml
+            echo '<application android:label="TIRNAV"></application></manifest>' >> app/src/main/AndroidManifest.xml
           fi
+
+          # build.gradle dosyasına eksiksiz namespace ve sdk tanımlarını ekliyoruz
+          echo "apply plugin: 'com.android.application'" > app/build.gradle
+          echo "android {" >> app/build.gradle
+          echo "    namespace 'com.ykocaman.tirnav'" >> app/build.gradle
+          echo "    compileSdk 33" >> app/build.gradle
+          echo "    defaultConfig {" >> app/build.gradle
+          echo "        applicationId 'com.ykocaman.tirnav'" >> app/build.gradle
+          echo "        minSdk 21" >> app/build.gradle
+          echo "        targetSdk 33" >> app/build.gradle
+          echo "        versionCode 1" >> app/build.gradle
+          echo "        versionName '1.0'" >> app/build.gradle
+          echo "    }" >> app/build.gradle
+          echo "}" >> app/build.gradle
           
           # Kök ayarları
           echo "include ':app'" > settings.gradle
