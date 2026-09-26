@@ -42,7 +42,8 @@ jobs:
 
       - name: TIRNAV APK Derle
         run: |
-          gradle assembleDebug --no-daemon
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon
 
           cp \
             app/build/outputs/apk/debug/app-debug.apk \
@@ -55,3 +56,4 @@ jobs:
           path: app/build/outputs/apk/debug/TIRNAV.apk
           if-no-files-found: error
           retention-days: 1
+          
