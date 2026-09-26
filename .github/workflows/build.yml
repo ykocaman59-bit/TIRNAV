@@ -1,109 +1,43 @@
 name: TIRNAV Android APK Builder
+on: push: branches: [ main, master ] workflow_dispatch:
+jobs: build: runs-on: ubuntu-latest
+steps:
+  - name: Repo Kodlarını İndir
+    uses: actions/checkout@v4
 
-on:
-  push:
-    branches: [ main, master ]
-  workflow_dispatch:
+  - name: Java 17 Kur
+    uses: actions/setup-java@v4
+    with:
+      distribution: temurin
+      java-version: '17'
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+  - name: Android SDK Kur
+    uses: android-actions/setup-android@v4
+    with:
+      packages: 'platform-tools'
 
-    steps:
-      - name: Repo Kodlarını İndir
-        uses: actions/checkout@v4
+  - name: Android SDK 33 ve Build Tools Kur
+    run: |
+      sdkmanager "platforms;android-33" "build-tools;33.0.2"
 
-      - name: Java (JDK) Ortamını Kur
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
+  - name: Gradle Wrapper Oluştur
+    run: |
+      gradle wrapper --gradle-version 7.5
+      chmod +x gradlew
 
-      - name: Gradle Kurulumu
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '7.5'
+  - name: APK Derle
+    run: |
+      ./gradlew clean assembleDebug --no-daemon --stacktrace
 
-      - name: Android SDK Kurulumu
-        uses: android-actions/setup-android@v3
+  - name: APK Dosyasını Hazırla
+    run: |
+      mkdir -p output
+      cp app/build/outputs/apk/debug/app-debug.apk output/TIRNAV.apk
 
-      - name: Android SDK 33 Kur
-        run: |
-          yes | sdkmanager --licenses || true
-          sdkmanager "platforms;android-33" "build-tools;33.0.2"
-
-      - name: Proje klasörlerini hazırla
-        run: |
-          mkdir -p app/src/main/java
-          mkdir -p app/src/main/res
-
-      - name: Launcher ikonunu hazırla
-        run: |
-          if [ -f "icon.svg" ]; then
-            sudo apt-get update
-            sudo apt-get install -y librsvg2-bin
-
-            mkdir -p app/src/main/res/mipmap-hdpi
-
-            rsvg-convert \
-              -w 192 \
-              -h 192 \
-              icon.svg \
-              -o app/src/main/res/mipmap-hdpi/ic_launcher.png
-
-            cp \
-              app/src/main/res/mipmap-hdpi/ic_launcher.png \
-              app/src/main/res/mipmap-hdpi/ic_launcher_round.png
-          else
-            echo "icon.svg bulunamadı, ikon oluşturma atlanıyor."
-          fi
-
-      - name: Proje dosyalarını kontrol et
-        run: |
-          echo "=============================="
-          echo "ROOT build.gradle"
-          echo "=============================="
-          cat build.gradle
-
-          echo "=============================="
-          echo "settings.gradle"
-          echo "=============================="
-          cat settings.gradle
-
-          echo "=============================="
-          echo "app/build.gradle"
-          echo "=============================="
-          cat app/build.gradle
-
-          echo "=============================="
-          echo "AndroidManifest.xml"
-          echo "=============================="
-          cat app/src/main/AndroidManifest.xml
-
-      - name: Gradle Wrapper oluştur
-        run: |
-          gradle wrapper --gradle-version 7.5
-          chmod +x gradlew
-
-      - name: APK Derle ve Üret
-        run: |
-          ./gradlew clean assembleDebug --no-daemon --stacktrace
-
-      - name: APK Dosyasını Hazırla
-        run: |
-          mkdir -p output
-
-          cp \
-            app/build/outputs/apk/debug/app-debug.apk \
-            output/TIRNAV.apk
-
-          echo "APK başarıyla oluşturuldu:"
-          ls -lh output/TIRNAV.apk
-
-      - name: APK Dosyasını Kaydet
-        uses: actions/upload-artifact@v4
-        with:
-          name: TIRNAV
-          path: output/TIRNAV.apk
-          if-no-files-found: error
-          retention-days: 7
+  - name: APK'yı Kaydet
+    uses: actions/upload-artifact@v4
+    with:
+      name: TIRNAV
+      path: output/TIRNAV.apk
+      if-no-files-found: error
+      retention-days: 7
